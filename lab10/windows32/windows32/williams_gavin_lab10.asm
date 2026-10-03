@@ -1,0 +1,83 @@
+; Example assembly language program -- adds 158 to number in memory
+; Author:  R. Detmer
+; Date:    6/2013
+
+.586
+.MODEL FLAT
+
+include io.h            ; header file for input/output
+
+.STACK  4096            ; reserve 4096-byte stack
+
+.DATA
+prompt1     BYTE    "Enter a string: ", 0
+stringIn    BYTE    80 DUP (?)          ; input string buffer
+
+prompt2     BYTE    "Enter character to find: ", 0
+charToFind  BYTE    1 DUP (?)                 ; character to find (room for newline + null)
+
+outputLbl   BYTE    "Character found this many times: ", 0
+outputCount BYTE    10 DUP (?)
+
+.CODE                           ; start of main program code
+_MainProc    PROC
+        input prompt2, charToFind, 1         ; get character to find
+        mov BYTE PTR [charToFind + 1], 0     ; null terminate character input to cutoff any extra input
+
+        input prompt1, stringIn, 80          ; get input string from user
+
+        ; push parameters and call charCount
+        lea eax, stringIn
+        push eax				
+        lea eax, charToFind
+        push eax                            ; push address of character
+
+        call charCount                      ; call string character count function (result in eax)
+        add  esp, 8                         ; clean up stack (2 parameters)
+
+        ; display result
+        dtoa outputCount, eax               ; convert count to string
+        output outputLbl, outputCount       ; output result
+
+        mov   eax, 0            ; exit with return code 0
+        ret
+_MainProc    ENDP
+
+charCount PROC
+        push ebp
+        mov  ebp, esp
+
+        push edi
+        push esi
+        pushfd  ; save flags
+        
+        mov esi , [ebp + 8]             ; get address of string
+        mov edi , [ebp + 12]            ; get address of char
+        xor eax, eax ; clear eax
+        mov al ,  BYTE PTR [edi]        ; get the character to find
+
+        ; clear ebx and ecx
+        xor ecx, ecx
+        xor ebx, ebx
+
+        whileNoNull:
+            cmp BYTE PTR [esi + ecx], 0  ; check for null terminator
+            je   endWhileNoNull          ; if null, end loop
+
+            cmp BYTE PTR [esi + ecx], al ; compare current character with target
+            jne  skipIncrement           ; if not equal, skip incrementing count
+            inc  ebx                     ; increment count
+
+        skipIncrement:
+            inc ecx                  ; move to next character
+            jmp  whileNoNull             ; repeat loop
+
+        endWhileNoNull:
+        mov eax, ebx		  ; move count to eax for return value
+        popfd   ; restore flags
+        pop  esi
+        pop  edi
+        pop  ebp
+        ret
+charCount ENDP
+END                             ; end of source code

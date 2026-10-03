@@ -1,0 +1,144 @@
+Microsoft (R) Macro Assembler Version 14.44.35216.0	    11/08/25 19:47:11
+test.asm						     Page 1 - 1
+
+
+				; Lab 9: Selection Sort Algorithm as a procedure
+				; With no way to see output, I can only hope that this works properly.
+				; Author:  G. Williams
+				; Date:    11/08/2025
+
+				.586
+				.MODEL FLAT
+
+				.STACK  4096                     ; reserve 4096-byte stack
+
+ 00000000			.DATA                            ; reserve storage for data
+ 00000000  00000004 [		arr       DWORD   4 DUP(?)       ; array of 4 DWORDs
+	    00000000
+	   ]
+
+ 00000000			.CODE                            ; start of main program code
+ 00000000			main    PROC
+				        ; Initialize array with unsorted values
+ 00000000  C7 05 00000000 R	        mov     DWORD PTR [arr], 64
+	   00000040
+ 0000000A  C7 05 00000004 R	        mov     DWORD PTR [arr + 4], 25
+	   00000019
+ 00000014  C7 05 00000008 R	        mov     DWORD PTR [arr + 8], 12
+	   0000000C
+ 0000001E  C7 05 0000000C R	        mov     DWORD PTR [arr + 12], 37
+	   00000025
+
+ 00000028  A1 00000000 R	        mov eax, arr
+
+				        ; Call selection sort procedure
+ 0000002D  8D 3D 00000000 R	        lea     edi, arr        ; load address of array into EDI
+ 00000033  B9 00000004		        mov     ecx, 4         ; number of elements in array
+ 00000038  E8 00000006		        call    selSort         ; call selection sort procedure
+
+ 0000003D  B8 00000000		        mov   eax, 0             ; exit with return code 0
+ 00000042  C3			        ret
+ 00000043			main    ENDP
+
+				; Selection Sort Procedure
+				; Input: EDI = pointer to array
+				;        ECX = number of elements in array
+				; Affects: EAX, EDX, EBX, ESI
+ 00000043			selSort PROC
+ 00000043  53			        push    ebx             ; save registers
+ 00000044  57			        push    edi
+ 00000045  52			        push    edx
+
+ 00000046  83 F9 02		        cmp     ecx, 2          ; if number of elements <= 1, no sort needed
+ 00000049  7C 31		        jl     endOuterLoop
+
+ 0000004B  BA 00000001		        mov    edx, 1          ; edx = outer loop index i = 1
+ 00000050			    outerLoop:
+ 00000050  3B D1		        cmp     edx, ecx        ; for i = 1 to numElements - 1
+ 00000052  7D 28		        jge     endOuterLoop      
+				        
+ 00000054  8B DA		        mov     ebx, edx                            ; ebx = smallSpot variable from pseudocode
+ 00000056  8B 34 97		        mov     esi, DWORD PTR [edi + edx*4]        ; esi = arr[i]. Makes sense because esi is for holding addresses
+
+ 00000059  52			        push    edx                 ; save edx so we can re-use in inner loop
+
+ 0000005A  8B C2		        mov     eax, edx
+ 0000005C  40			        inc     eax
+ 0000005D			    innerLoop:
+ 0000005D  3B C1		        cmp     eax, ecx        ; for j = i + 1 to numElements - 1
+ 0000005F  7D 0E		        jge     endInnerLoop
+ 00000061  8B 14 87		        mov     edx, DWORD PTR [edi + eax*4] ; edx = arr[j]
+ 00000064  3B D6		        cmp     edx, esi
+ 00000066  7D 04		        jge     skipUpdate
+ 00000068  8B F2		        mov     esi, edx       ; smallVal = arr[j] (as registers)
+ 0000006A  8B D8		        mov     ebx, eax       ; smallSpot = j (as registers)
+
+ 0000006C			    skipUpdate:
+ 0000006C  40			        inc     eax
+ 0000006D  EB EE		        jmp     innerLoop
+
+ 0000006F			    endInnerLoop:
+ 0000006F  5A			        pop edx				 ; restore edx for swapping
+
+ 00000070  8B 04 97		        mov     eax, DWORD PTR [edi + edx*4]    ; eax = arr[i]
+ 00000073  89 04 9F		        mov     DWORD PTR [edi + ebx*4], eax    ; arr[smallSpot] = arr[i]
+ 00000076  89 34 97		        mov     DWORD PTR [edi + edx*4], esi    ; arr[i] = smallVal
+
+ 00000079  42			        inc     edx
+ 0000007A  EB D4		        jmp     outerLoop
+
+
+ 0000007C			    endOuterLoop:
+ 0000007C  5A			        pop     edx             ; restore registers
+ 0000007D  5F			        pop     edi
+ 0000007E  5B			        pop     ebx
+ 0000007F  C3			        ret
+ 00000080			selSort ENDP
+
+				END                             ; end of source code
+Microsoft (R) Macro Assembler Version 14.44.35216.0	    11/08/25 19:47:11
+test.asm						     Symbols 2 - 1
+
+
+
+
+Segments and Groups:
+
+                N a m e                 Size     Length   Align   Combine Class
+
+FLAT . . . . . . . . . . . . . .	GROUP
+STACK  . . . . . . . . . . . . .	32 Bit	 00001000 Para	  Stack	  'STACK'	 
+_DATA  . . . . . . . . . . . . .	32 Bit	 00000010 Para	  Public  'DATA'	
+_TEXT  . . . . . . . . . . . . .	32 Bit	 00000080 Para	  Public  'CODE'	
+
+
+Procedures, parameters, and locals:
+
+                N a m e                 Type     Value    Attr
+
+main . . . . . . . . . . . . . .	P Near	 00000000 _TEXT	Length= 00000043 Public
+selSort  . . . . . . . . . . . .	P Near	 00000043 _TEXT	Length= 0000003D Public
+  outerLoop  . . . . . . . . . .	L Near	 00000050 _TEXT	
+  innerLoop  . . . . . . . . . .	L Near	 0000005D _TEXT	
+  skipUpdate . . . . . . . . . .	L Near	 0000006C _TEXT	
+  endInnerLoop . . . . . . . . .	L Near	 0000006F _TEXT	
+  endOuterLoop . . . . . . . . .	L Near	 0000007C _TEXT	
+
+
+Symbols:
+
+                N a m e                 Type     Value    Attr
+
+@CodeSize  . . . . . . . . . . .	Number	 00000000h   
+@DataSize  . . . . . . . . . . .	Number	 00000000h   
+@Interface . . . . . . . . . . .	Number	 00000000h   
+@Model . . . . . . . . . . . . .	Number	 00000007h   
+@code  . . . . . . . . . . . . .	Text   	 _TEXT
+@data  . . . . . . . . . . . . .	Text   	 FLAT
+@fardata?  . . . . . . . . . . .	Text   	 FLAT
+@fardata . . . . . . . . . . . .	Text   	 FLAT
+@stack . . . . . . . . . . . . .	Text   	 FLAT
+arr  . . . . . . . . . . . . . .	DWord	 00000000 _DATA	
+
+	   0 Warnings
+	   0 Errors

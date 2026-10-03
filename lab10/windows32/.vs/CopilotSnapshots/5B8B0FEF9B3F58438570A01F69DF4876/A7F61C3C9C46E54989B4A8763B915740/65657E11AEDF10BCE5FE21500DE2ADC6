@@ -1,0 +1,99 @@
+﻿; Example assembly language program -- adds 158 to number in memory
+; Author:  R. Detmer
+; Date:    6/2013
+
+.586
+.MODEL FLAT
+
+include io.h            ; header file for input/output
+
+.STACK  4096            ; reserve 4096-byte stack
+
+.DATA
+prompt1     BYTE    "Enter a string: ", 0
+stringIn    BYTE    80 DUP (?)          ; input string buffer
+
+prompt2     BYTE    "Enter character to find: ", 0
+charToFind  BYTE    3 DUP (?)                 ; character to find (room for newline + null)
+
+outputLbl   BYTE    "Character found this many times: ", 0
+outputCount BYTE    10 DUP (?)
+
+.CODE                           ; start of main program code
+_MainProc    PROC
+        input prompt2, charToFind, 3         ; get character to find
+        mov BYTE PTR [charToFind + 1], 0     ; null terminate character input to cutoff any extra input
+
+        input prompt1, stringIn, 80          ; get input string from user
+
+        ; push parameters and call charCount
+        lea eax, stringIn
+        push eax				
+        lea eax, charToFind
+        push eax                            ; push address of character
+
+        call charCount                      ; call string character count function (result in eax)
+        add  esp, 8                         ; clean up stack (2 parameters)
+
+        ; display result
+        dtoa outputCount, eax               ; convert count to string
+        output outputLbl, outputCount       ; output result
+
+        mov   eax, 0            ; exit with return code 0
+        ret
+_MainProc    ENDP
+
+charCount PROC
+        push ebp
+        mov  ebp, esp
+        push edi
+        push esi
+        push ecx
+        pushfd                          ; save flags including direction flag
+        
+        mov esi, [ebp + 8]             ; get address of string  
+        mov edi, [ebp + 12]            ; get address of char
+        
+        ; Get the character to find
+        mov al, BYTE PTR [edi]         ; character to search for
+        
+        ; First, find string length by scanning for null terminator
+        mov edi, esi                   ; point edi to string
+        mov ecx, 0FFFFFFFFh            ; set maximum count
+        push eax                       ; save target character
+        xor al, al                     ; scan for null (0)
+        cld                            ; clear direction flag (scan forward)
+        repne scasb                    ; scan until null found
+        not ecx                        ; convert remaining count to actual length
+        dec ecx                        ; don't count the null terminator
+        mov edx, ecx                   ; save string length
+        pop eax                        ; restore target character
+        
+        ; Now scan through string looking for target character
+        mov edi, esi                   ; reset to start of string
+        mov ecx, edx                   ; set count to string length
+        xor ebx, ebx                   ; clear match counter
+        cld                            ; ensure forward scanning
+        
+scanLoop:
+        test ecx, ecx                  ; check if done
+        jz scanDone
+        
+        scasb                          ; compare AL with [EDI++]
+        jne notFound
+        inc ebx                        ; found a match, increment counter
+        
+notFound:
+        loop scanLoop                  ; decrement ECX and continue if not zero
+        
+scanDone:
+        mov eax, ebx                   ; return match count
+        
+        popfd                          ; restore flags
+        pop ecx
+        pop esi  
+        pop edi
+        pop ebp
+        ret
+charCount ENDP
+END                             ; end of source code

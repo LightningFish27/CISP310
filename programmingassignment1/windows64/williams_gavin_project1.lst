@@ -1,0 +1,219 @@
+Microsoft (R) Macro Assembler (x64) Version 14.44.35216.0   10/17/25 19:09:15
+williams_gavin_project1.asm				     Page 1 - 1
+
+
+				; Calculate total value of coins
+				; Author:  G. Williams
+				; Date:    10/08/25
+
+				INCLUDE io.h            ; header file for input/output
+			      C ; IO.H -- header file for I/O macros (listing suppressed)
+			      C .NOLIST      ; turn off listing
+			      C .LIST        ; begin listing
+			      C 
+
+ 00000000			.DATA               ; reserve storage for data
+ 00000000 00000000		totalValueCents     DWORD   ?
+ 00000004 00000000		numberOfCoins       DWORD   ?
+ 00000008 00000000		numDollars          DWORD   ?
+ 0000000C 00000000		numCents            DWORD   ?
+
+ 00000010 45 6E 74 65 72	penniesPrompt       BYTE    "Enter number of pennies", 0
+	   20 6E 75 6D 62
+	   65 72 20 6F 66
+	   20 70 65 6E 6E
+	   69 65 73 00
+ 00000028 45 6E 74 65 72	nickelsPrompt       BYTE    "Enter number of nickels", 0
+	   20 6E 75 6D 62
+	   65 72 20 6F 66
+	   20 6E 69 63 6B
+	   65 6C 73 00
+ 00000040 45 6E 74 65 72	dimesPrompt         BYTE    "Enter number of dimes", 0
+	   20 6E 75 6D 62
+	   65 72 20 6F 66
+	   20 64 69 6D 65
+	   73 00
+ 00000056 45 6E 74 65 72	quartersPrompt      BYTE    "Enter number of quarters", 0
+	   20 6E 75 6D 62
+	   65 72 20 6F 66
+	   20 71 75 61 72
+	   74 65 72 73 00
+ 0000006F 45 6E 74 65 72	fiftyCentsPrompt    BYTE    "Enter number of 50-cent pieces", 0
+	   20 6E 75 6D 62
+	   65 72 20 6F 66
+	   20 35 30 2D 63
+	   65 6E 74 20 70
+	   69 65 63 65 73
+	   00
+ 0000008E 45 6E 74 65 72	dollarsPrompt       BYTE    "Enter number of dollars", 0
+	   20 6E 75 6D 62
+	   65 72 20 6F 66
+	   20 64 6F 6C 6C
+	   61 72 73 00
+
+ 000000A6  00000028 [		string              BYTE    40 DUP (?)
+	    00
+	   ]
+ 000000CE 43 6F 69 6E 20	outputHeaderLbl     BYTE    "Coin Information", 0
+	   49 6E 66 6F 72
+	   6D 61 74 69 6F
+	   6E 00
+ 000000DF 4E 75 6D 62 65	numLbl              BYTE    "Number of coins:", 0
+	   72 20 6F 66 20
+	   63 6F 69 6E 73
+	   3A 00
+ 000000F0 44 6F 6C 6C 61	dLbl                BYTE    "Dollars:", 0
+	   72 73 3A 00
+ 000000F9 43 65 6E 74 73	cLbl                BYTE    "Cents:", 0
+	   3A 00
+
+				; String versions of numbers for output purposes
+ 00000100 00			numCoinsAsString        BYTE    11 DUP(?), 0
+ 0000010C 00			numDollarsAsString      BYTE    11 DUP(?), 0
+ 00000118 00			numCentsAsString        BYTE    11 DUP(?), 0
+ 00000124 00			outputString            BYTE    50 DUP(?), 0
+
+ 00000000			.CODE
+
+ 00000000			MainProc  PROC
+ 00000000  48/ 83 EC 78		          sub     rsp, 120        ; reserve stack space for MainProc
+
+ 00000004  B8 00000000		          mov     eax, 0            ; clear eax
+
+				          ; Get user input in following section
+
+				          input   penniesPrompt, string, 40     ; read ASCII characters
+				          atod    string                        ; convert to integer
+ 00000095  89 05 00000004 R	          mov     numberOfCoins, eax            ; store in memory, starting numberOfCoins
+ 0000009B  BB 00000001		          mov	  ebx, 1						; store value of penny in ebx
+ 000000A0  F7 E3		          mul	  ebx						    ; multiply eax by value of penny (ebx), then store in eax
+ 000000A2  01 05 00000000 R	          add	  totalValueCents, eax          ; add value in pennies to totalValueCents
+
+				          input   nickelsPrompt, string, 40     ; read ASCII characters
+				          atod    string                        ; convert to integer
+ 00000134  01 05 00000004 R	          add     numberOfCoins, eax            ; add to numberOfCoins
+ 0000013A  BB 00000005		          mov	  ebx, 5						; store value of nickel in ebx
+ 0000013F  F7 E3		          mul	  ebx						    ; multiply eax by value of nickel (ebx), then store in eax
+ 00000141  01 05 00000000 R	          add	  totalValueCents, eax          ; add value in nickels to totalValueCents
+
+				          input   dimesPrompt, string, 40       ; read ASCII characters
+				          atod    string                        ; convert to integer
+ 000001D3  01 05 00000004 R	          add     numberOfCoins, eax            ; add to numberOfCoins
+ 000001D9  BB 0000000A		          mov	  ebx, 10						; store value of dime in ebx
+ 000001DE  F7 E3		          mul	  ebx						    ; multiply eax by value of dime (ebx), then store in eax
+ 000001E0  01 05 00000000 R	          add	  totalValueCents, eax          ; add value in dimes to totalValueCents
+
+				          input   quartersPrompt, string, 40    ; read ASCII characters
+				          atod    string                        ; convert to integer
+ 00000272  01 05 00000004 R	          add     numberOfCoins, eax            ; add to numberOfCoins
+ 00000278  BB 00000019		          mov	  ebx, 25						; store value of quarter in ebx
+ 0000027D  F7 E3		          mul	  ebx						    ; multiply eax by value of quarter (ebx), then store in eax
+ 0000027F  01 05 00000000 R	          add	  totalValueCents, eax          ; add value in quarters to totalValueCents
+
+				          input   fiftyCentsPrompt, string, 40  ; read ASCII characters
+				          atod    string                        ; convert to integer
+ 00000311  01 05 00000004 R	          add     numberOfCoins, eax            ; add to numberOfCoins
+ 00000317  BB 00000032		          mov	  ebx, 50						; store value of fifty cent piece in ebx
+ 0000031C  F7 E3		          mul	  ebx						    ; multiply eax by value of fifty cent piece (ebx), then store in eax
+ 0000031E  01 05 00000000 R	          add	  totalValueCents, eax          ; add value in fifty cent pieces to totalValueCents
+
+				          input   dollarsPrompt, string, 40     ; read ASCII characters
+				          atod    string                        ; convert to integer
+ 000003B0  01 05 00000004 R	          add     numberOfCoins, eax            ; add to numberOfCoins
+ 000003B6  BB 00000064		          mov	  ebx, 100						; store value of dollar in ebx
+ 000003BB  F7 E3		          mul	  ebx						    ; multiply eax by value of dollar (ebx), then store in eax
+ 000003BD  01 05 00000000 R	          add	  totalValueCents, eax          ; add value in dollars to totalValueCents
+
+
+				          ; Output results in following section
+
+				        
+ 000003C3  8B 05 00000004 R	          mov     eax, numberOfCoins            ; store numberOfCoins in eax
+				          dtoa    numCoinsAsString, eax         ; convert to ASCII characters
+
+ 000003EE  B9 00000064		          mov     ecx, 100                      ; prepare to divide by 100 to finds cents and dollars
+ 000003F3  33 D2		          xor     edx, edx                      ; clear edx prior to dividing
+ 000003F5  F7 F1		          div     ecx                           ; divide eax by 100, quotient in eax, remainder in edx
+ 000003F7  89 05 00000008 R	          mov     numDollars, eax               ; store number of dollars
+ 000003FD  89 15 0000000C R	          mov     numCents, edx                 ; store number of cents
+
+ 00000403  8B 05 0000000C R	          mov     eax, numCents                 ; store numCents in eax
+				          dtoa    numCentsAsString, eax         ; convert to ASCII characters
+ 0000042E  8B 05 00000008 R	          mov	  eax, numDollars               ; store numDollars in eax
+				          dtoa    numDollarsAsString, eax       ; convert to ASCII characters
+
+				          ; At this point, all calculations are done, and all values have been converted to strings for output
+				          ; Output all results below
+
+
+				          ; Now outputString is ready for output
+				          output numLbl, numCoinsAsString       ; Output window for number of coins
+				          output dLbl, numDollarsAsString       ; Output window for number of dollars
+				          output cLbl, numCentsAsString         ; Output window for number of cents
+
+ 00000567  48/ 83 C4 78		          add     rsp, 120        ; restore stack
+ 0000056B  48/ C7 C0		          mov     rax, 0          ; value to return (0)
+	   00000000
+ 00000572  C3			          ret
+ 00000573			MainProc ENDP
+				END
+
+
+
+Microsoft (R) Macro Assembler (x64) Version 14.44.35216.0   10/17/25 19:09:15
+williams_gavin_project1.asm				     Symbols 2 - 1
+
+
+
+
+Macros:
+
+                N a m e                 Type
+
+atod . . . . . . . . . . . . . .	Proc
+atow . . . . . . . . . . . . . .	Proc
+dtoa . . . . . . . . . . . . . .	Proc
+input  . . . . . . . . . . . . .	Proc
+output . . . . . . . . . . . . .	Proc
+wtoa . . . . . . . . . . . . . .	Proc
+
+
+Procedures, parameters, and locals:
+
+                N a m e                 Type     Value    Attr
+
+MainProc . . . . . . . . . . . .	P 	 00000000 _TEXT	Length= 00000573 Public
+
+
+Symbols:
+
+                N a m e                 Type     Value    Attr
+
+atodproc . . . . . . . . . . . .	L 	 00000000 External
+atowproc . . . . . . . . . . . .	L 	 00000000 External
+cLbl . . . . . . . . . . . . . .	Byte	 000000F9 _DATA	
+dLbl . . . . . . . . . . . . . .	Byte	 000000F0 _DATA	
+dimesPrompt  . . . . . . . . . .	Byte	 00000040 _DATA	
+dollarsPrompt  . . . . . . . . .	Byte	 0000008E _DATA	
+dtoaproc . . . . . . . . . . . .	L 	 00000000 External
+fiftyCentsPrompt . . . . . . . .	Byte	 0000006F _DATA	
+getInput . . . . . . . . . . . .	L 	 00000000 External
+nickelsPrompt  . . . . . . . . .	Byte	 00000028 _DATA	
+numCentsAsString . . . . . . . .	Byte	 00000118 _DATA	
+numCents . . . . . . . . . . . .	DWord	 0000000C _DATA	
+numCoinsAsString . . . . . . . .	Byte	 00000100 _DATA	
+numDollarsAsString . . . . . . .	Byte	 0000010C _DATA	
+numDollars . . . . . . . . . . .	DWord	 00000008 _DATA	
+numLbl . . . . . . . . . . . . .	Byte	 000000DF _DATA	
+numberOfCoins  . . . . . . . . .	DWord	 00000004 _DATA	
+outputHeaderLbl  . . . . . . . .	Byte	 000000CE _DATA	
+outputString . . . . . . . . . .	Byte	 00000124 _DATA	
+penniesPrompt  . . . . . . . . .	Byte	 00000010 _DATA	
+quartersPrompt . . . . . . . . .	Byte	 00000056 _DATA	
+showOutput . . . . . . . . . . .	L 	 00000000 External
+string . . . . . . . . . . . . .	Byte	 000000A6 _DATA	
+totalValueCents  . . . . . . . .	DWord	 00000000 _DATA	
+wtoaproc . . . . . . . . . . . .	L 	 00000000 External
+
+	   0 Warnings
+	   0 Errors

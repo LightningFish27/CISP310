@@ -1,0 +1,398 @@
+Microsoft (R) Macro Assembler Version 14.50.35719.0	    12/04/25 15:16:49
+example.asm						     Page 1 - 1
+
+
+				; williams_gavin_lab11.asm -- approximate cube root of a float using Newton's method
+				; Author:  G. Williams
+				; Date:    12/2025
+
+				.586
+				.MODEL FLAT
+
+				INCLUDE io.h            ; header file for input/output
+			      C ; IO.H -- header file for I/O macros (listing suppressed)
+			      C .NOLIST      ; turn off listing
+			      C .LIST        ; begin listing
+			      C 
+
+				.STACK 4096
+
+ 00000000			.DATA
+ 00000000 45 6E 74 65 72	prompt1         BYTE    "Enter a number: ", 0
+	   20 61 20 6E 75
+	   6D 62 65 72 3A
+	   20 00
+ 00000011			string          BYTE    12 DUP (?)
+ 0000001D 00000000		float           REAL4   ? ; the floating point number input
+
+ 00000021 54 68 65 20 63	resultLbl       BYTE    "The cube root is ", 0
+	   75 62 65 20 72
+	   6F 6F 74 20 69
+	   73 20 00
+ 00000033  0000000C [		rootOut            BYTE    12 DUP (?), 0 ; string representation of root
+	    00
+	   ] 00
+
+ 00000040 3F800000		root            REAL4   1.0 ; cube root result
+ 00000044 00000000		oldRoot		    REAL4   0.0 ; previous approximation
+ 00000048 3A83126F		smallValue      REAL4   0.001 ; convergence threshold
+ 0000004C 40000000		two             REAL4   2.0   ; constant 2.0
+ 00000050 40400000		three           REAL4   3.0   ; constant 3.0
+
+ 00000000			.CODE
+ 00000000			_MainProc PROC
+				        ; Input
+				        input   prompt1, string, 12         ; read ASCII characters
+ 0000001E  8D 05 00000011 R	        lea     eax, string             ; address of string
+ 00000024  50			        push    eax                     ; push eax 
+ 00000025  E8 00000087		        call    atofproc                ; convert to floating-point, result in ST(0)
+ 0000002A  83 C4 04		        add     esp, 4                  ; clean up 
+ 0000002D  D9 1D 0000001D R	        fstp    float                   ; store input value in result
+
+				        
+
+				        ; Algorithm: 
+				        ;   root := 1.0; 
+				        ;   repeat 
+				        ;       oldRoot := root;
+				        ;       root := (2.0*root + x/(root*root)) / 3.0;
+				        ;   until (|root - oldRoot| < smallValue
+
+				        ; root already 1.0 from data segment initialization
+
+ 00000033			        cubeRootLoop:
+				            oldRoot = root               ; oldRoot := root
+example.asm(48) : error A2005:symbol redefinition : oldRoot
+ 00000033  D9 05 00000040 R	            fld     root                 ; load root
+ 00000039  D9 05 0000004C R	            fld     two                  ; load 2.0
+ 0000003F  D8 C9		            fmul    st(0), st(1)        ; 2.0 * root
+ 00000041  D9 05 0000001D R	            fld     float                ; load float input
+ 00000047  D9 05 00000040 R	            fld     root                 ; load root
+ 0000004D  D9 05 00000040 R	            fld     root                 ; load root
+ 00000053  D8 C9		            fmul    st(0), st(1)        ; root * root
+ 00000055  DC F9		            fdiv    st(1), st(0)        ; x / (root * root)
+ 00000057  D8 C2		            fadd    st(0), st(2)        ; (2.0*root) + (x/(root*root))
+ 00000059  D9 05 00000050 R	            fld     three                ; load 3.0
+ 0000005F  DC F9		            fdiv    st(1), st(0)        ; root := ((2.0*root) + (x/(root*root))) / 3.0
+ 00000061  D9 1D 00000040 R	            fstp    root                 ; store new root
+				            ; check for convergence: |root - oldRoot| < smallValue
+ 00000067  D9 05 00000040 R	            fld     root                 ; load root
+ 0000006D  D9 05 00000044 R	            fld     oldRoot              ; load oldRoot
+ 00000073  D8 E1		            fsub    st(0), st(1)        ; root - oldRoot
+ 00000075  D9 E1		            fabs                        ; absolute value
+ 00000077  D9 05 00000048 R	            fld     smallValue           ; load smallValue
+				            fcom    st(1), st(0)        ; compare |root - oldRoot| with smallValue
+example.asm(67) : error A2152:coprocessor register cannot be first operand
+ 0000007D  9B DF E0		            fstsw   ax                  ; store FPU status word in AX
+ 00000080  9E			            sahf                        ; transfer status word to CPU flags
+ 00000081  73 B0		            jnb     cubeRootLoop        ; repeat if not below (i.e., if >=)
+
+				        ; Parameters passed on the stack for ftoaproc:
+				        ;   (1) 32-bit floating point value (second)
+				        ;   (2) address of ASCII destination string (first)
+ 00000083  8D 05 00000033 R	        lea     eax, rootOut                 ; address of root (output string)
+ 00000089  50			        push    eax                       ; push address of root
+ 0000008A  FF 35 0000001D R	        push    float                     ; push float
+ 00000090  E8 00000090		        call    ftoaproc                  ; ftoa(float, root)
+ 00000095  83 C4 08		        add     esp, 8                    ; clean up stack
+
+				        output resultLbl, root          ; output result label
+
+ 000000B1			 _MainProc ENDP
+
+ 000000B1			atofproc PROC
+				; convert ASCII string to floating point number
+				; Parameter passed on the stack: address of ASCII source string
+				; After an optional leading minus sign, only digits 0-9 and a decimal
+				; point are accepted -- the scan terminates with any other character.
+				; The floating point value is returned in ST.
+				; Local variables are stored on the stack:
+				; ten   [EBP-4] -- always 10 after initial code
+				; point [EBP-8] -- Boolean, -1 for true, 0 for false
+				; minus [EBP-12] -- Boolean, -1 for true, 0 for false
+				; digit [EBP-16] -- next digit as an integer
+ 000000B1  55			        push    ebp                     ; establish stack frame
+ 000000B2  8B EC		        mov     ebp, esp
+ 000000B4  83 EC 10		        sub     esp, 16                 ; stack space for local variables
+ 000000B7  50			        push    eax                     ; save registers
+ 000000B8  56			        push    esi
+ 000000B9  C7 45 FC		        mov     DWORD PTR [ebp-4], 10   ; ten := 10
+	   0000000A
+ 000000C0  D9 E8		        fld1                            ; divisor := 1.0
+ 000000C2  D9 EE		        fldz                            ; value := 0.0
+ 000000C4  C7 45 F8		        mov     DWORD PTR [ebp-8], 0    ; point := false
+	   00000000
+ 000000CB  C7 45 F4		        mov     DWORD PTR [ebp-12], 0   ; minus := false
+	   00000000
+ 000000D2  8B 75 08		        mov     esi, [ebp+8]            ; address of first source character
+ 000000D5  80 3E 2D		        cmp     BYTE PTR [esi], '-'     ; leading minus sign?
+ 000000D8  75 08		        jne     endifMinus              ; skip if not
+ 000000DA  C7 45 F4		        mov     DWORD PTR [ebp-12], -1  ; minus := true
+	   FFFFFFFF
+ 000000E1  46			        inc     esi                     ; point at next source character
+
+ 000000E2			endifMinus:
+
+ 000000E2			whileOK: 
+ 000000E2  8A 06		        mov al, [esi]                   ; get next character
+ 000000E4  3C 2E		        cmp al, '.'                     ; decimal point?
+ 000000E6  75 09		        jne endifPoint                  ; skip if not
+ 000000E8  C7 45 F8		        mov DWORD PTR [ebp-8], -1       ; point := true
+	   FFFFFFFF
+ 000000EF  EB 21		        jmp nextChar
+
+ 000000F1			endifPoint:
+ 000000F1  3C 30		        cmp al, '0'                     ; character >= '0'
+ 000000F3  7C 20		        jnge endwhileOK                 ; exit if not
+ 000000F5  3C 39		        cmp al, '9'                     ; character <= '9'
+ 000000F7  7F 1C		        jnle endwhileOK                 ; exit if not
+ 000000F9  83 E0 0F		        and eax, 0000000fh              ; convert ASCII to integer value
+ 000000FC  89 45 F0		        mov DWORD PTR [ebp-16], eax     ; put integer in memory
+ 000000FF  DA 4D FC		        fimul DWORD PTR [ebp-4]         ; value := value * 10
+ 00000102  DA 45 F0		        fiadd DWORD PTR [ebp-16]        ; value := value + digit
+ 00000105  83 7D F8 FF		        cmp DWORD PTR [ebp-8], -1       ; already found a decimal point?
+ 00000109  75 07		        jne endifDec                    ; skip if not
+ 0000010B  D9 C9		        fxch                            ; put divisor in ST and value in ST(1)
+ 0000010D  DA 4D FC		        fimul DWORD PTR [ebp-4]         ; divisor := divisor * 10
+ 00000110  D9 C9		        fxch                            ; value to ST; divisor back to ST(1)
+ 00000112			endifDec:
+
+ 00000112			nextChar: 
+ 00000112  46			    inc esi                             ; point at next source character
+ 00000113  EB CD		    jmp whileOK
+
+ 00000115			endwhileOK:
+ 00000115  DE F1		    fdivr                               ; value := value / divisor
+ 00000117  83 7D F4 FF		    cmp DWORD PTR [ebp-12], -1          ; was there a minus sign?
+ 0000011B  75 02		    jne endifNeg
+ 0000011D  D9 E0		    fchs ; value := -value
+
+ 0000011F			endifNeg:
+ 0000011F  5E			    pop esi                             ; restore registers
+ 00000120  58			    pop eax
+ 00000121  8B E5		    mov esp, ebp
+ 00000123  5D			    pop ebp
+ 00000124  C3			    ret                                 ; return
+ 00000125			atofproc ENDP
+
+				; procedure ftoaproc(source, result)
+				; convert floating point number to ASCII string 
+				; Parameters passed on the stack:
+				;   (1) 32-bit floating point value
+				;   (2) address of ASCII destination string
+				; ASCII string with format [blank/-]d.dddddE[+/-]dd is generated.
+				; (The string is always 12 characters long.)
+
+ 00000054			.DATA
+ 00000054 41200000		ten       REAL4  10.0
+ 00000058 3F800000		one       REAL4  1.0
+ 0000005C 36A7C5AC		round     REAL4  0.000005
+ 00000060 00000000		digit     DWORD  ?
+ 00000064 00000000		exponent  DWORD  ?
+ 00000068 0A			byteTen   BYTE   10
+
+ 00000125			.CODE
+ 00000125			ftoaproc  PROC
+ 00000125  55			          push ebp              ; establish stack frame
+ 00000126  8B EC		          mov  ebp, esp
+ 00000128  50			          push eax              ; save registers
+ 00000129  53			          push ebx
+ 0000012A  51			          push ecx
+ 0000012B  57			          push edi
+
+ 0000012C  9B DB E3		          finit                 ; initialize FPU
+ 0000012F  8B 7D 0C		          mov  edi, [ebp+12]    ; destination string address
+ 00000132  D9 45 08		          fld  REAL4 PTR [ebp+8]  ; value to ST 
+ 00000135  D9 E4		          ftst                  ; value >= 0?
+ 00000137  9B DF E0		          fstsw  ax             ; status word to AX
+ 0000013A  9E			          sahf                  ; condition code bits to flags
+ 0000013B  72 05		          jnae elseNeg          ; skip if negative
+ 0000013D  C6 07 20		          mov  BYTE PTR [edi], ' '  ; blank for positive
+ 00000140  EB 05		          jmp  endifNeg         ; exit if
+ 00000142  C6 07 2D		elseNeg:  mov  BYTE PTR [edi], '-'  ; minus for negative
+ 00000145  D9 E0		          fchs                  ; make number positive
+ 00000147			endifNeg:
+ 00000147  47			          inc  edi              ; point at next destination byte
+
+ 00000148  C7 05 00000064 R	          mov  exponent, 0      ; exponent := 0
+	   00000000
+ 00000152  D9 E4		          ftst                  ; value = 0?
+ 00000154  9B DF E0		          fstsw ax              ; status word to AX
+ 00000157  9E			          sahf                  ; condition code bits to flags
+ 00000158  74 40		          jz   endifZero        ; skip if zero
+ 0000015A  D8 15 00000054 R	          fcom ten              ; value > 10?
+ 00000160  9B DF E0		          fstsw ax              ; status word to AX
+ 00000163  9E			          sahf                  ; condition code bits to flags
+ 00000164  72 1A		          jnae elseLess         ; skip if value not >= 10
+ 00000166			untilLess:
+ 00000166  D8 35 00000054 R	          fdiv ten              ; value := value/10
+ 0000016C  FF 05 00000064 R	          inc  exponent         ; add 1 to exponent
+ 00000172  D8 15 00000054 R	          fcom ten              ; value < 10?
+ 00000178  9B DF E0		          fstsw ax              ; status word to AX
+ 0000017B  9E			          sahf                  ; condition code bits to flags
+ 0000017C  73 E8		          jnb  untilLess        ; continue until value < 10
+ 0000017E  EB 1A		          jmp  endifBigger      ; exit if
+ 00000180			elseLess:
+ 00000180			whileLess:
+ 00000180  D8 15 00000058 R	          fcom one              ; value < 1?
+ 00000186  9B DF E0		          fstsw ax              ; status word to AX
+ 00000189  9E			          sahf                  ; condition code bits to flags
+ 0000018A  73 0E		          jnb  endwhileLess     ; exit if not less
+ 0000018C  D8 0D 00000054 R	          fmul ten              ; value := 10*value
+ 00000192  FF 0D 00000064 R	          dec  exponent         ; subtract 1 from exponent
+ 00000198  EB E6		          jmp  whileLess        ; continue while value < 1
+ 0000019A			endwhileLess:
+ 0000019A			endifBigger:
+ 0000019A			endifZero:
+
+ 0000019A  D8 05 0000005C R	          fadd round            ; add rounding value
+ 000001A0  D8 15 00000054 R	          fcom ten              ; value > 10?
+ 000001A6  9B DF E0		          fstsw ax              ; status word to AX
+ 000001A9  9E			          sahf                  ; condition code bits to flags
+ 000001AA  72 0C		          jnae endifOver        ; skip if not
+ 000001AC  D8 35 00000054 R	          fdiv ten              ; value := value/10
+ 000001B2  FF 05 00000064 R	          inc  exponent         ; add 1 to exponent
+ 000001B8			endifOver:
+
+				; at this point 1.0 <= value < 10.0 (or value = 0.0)
+ 000001B8  D9 C0		          fld  st               ; copy value
+ 000001BA  DB 0D 00000060 R	          fisttp digit           ; store integer part
+ 000001C0  8B 1D 00000060 R	          mov  ebx, digit       ; copy integer to EBX
+ 000001C6  83 CB 30		          or   ebx, 30h         ; convert digit to character
+ 000001C9  88 1F		          mov  [edi], bl        ; store character in destination
+ 000001CB  47			          inc  edi              ; point at next destination byte
+ 000001CC  C6 07 2E		          mov  BYTE PTR [edi], '.'     ; decimal point
+ 000001CF  47			          inc  edi              ; point at next destination byte
+				          
+ 000001D0  B9 00000005		          mov  ecx, 5           ; count of remaining digits
+ 000001D5  DA 25 00000060 R	forDigit: fisub digit           ; subtract integer part
+ 000001DB  D8 0D 00000054 R	          fmul ten              ; multiply by 10
+ 000001E1  D9 C0		          fld  st               ; copy value
+ 000001E3  DB 0D 00000060 R	          fisttp digit          ; store integer part
+ 000001E9  8B 1D 00000060 R	          mov  ebx, digit       ; copy integer to EBX
+ 000001EF  83 CB 30		          or   ebx, 30h         ; convert digit to character
+ 000001F2  88 1F		          mov  [edi], bl        ; store character in destination
+ 000001F4  47			          inc  edi              ; point at next destination byte
+ 000001F5  E2 DE		          loop forDigit         ; repeat 5 times
+
+ 000001F7  C6 07 45		          mov  BYTE PTR [edi], 'E'  ; exponent indicator
+ 000001FA  47			          inc  edi              ; point at next destination byte
+ 000001FB  A1 00000064 R	          mov  eax, exponent    ; get exponent
+ 00000200  83 F8 00		          cmp  eax, 0           ; exponent >= 0 ?
+ 00000203  7C 05		          jnge NegExp
+ 00000205  C6 07 2B		          mov  BYTE PTR [edi], '+'  ; non-negative exponent
+ 00000208  EB 05		          jmp  endifNegExp
+ 0000020A  C6 07 2D		NegExp:   mov  BYTE PTR [edi], '-'  ; negative exponent
+ 0000020D  F7 D8		          neg  eax              ; change exponent to positive
+ 0000020F			endifNegExp:
+ 0000020F  47			          inc  edi              ; point at next destination byte
+
+ 00000210  F6 35 00000068 R	          div  byteTen          ; convert exponent to 2 digits
+ 00000216  0D 00003030		          or   eax, 3030h       ; convert both digits to ASCII
+ 0000021B  88 07		          mov  [edi], al        ; store characters in destination
+ 0000021D  88 67 01		          mov  [edi+1], ah
+
+ 00000220  5F			          pop  edi              ; restore registers
+ 00000221  59			          pop  ecx
+ 00000222  5B			          pop  ebx
+ 00000223  58			          pop  eax
+ 00000224  5D			          pop  ebp
+ 00000225  C3			          ret                   ; return
+ 00000226			ftoaproc  ENDP
+
+				END                             ; end of source code
+Microsoft (R) Macro Assembler Version 14.50.35719.0	    12/04/25 15:16:49
+example.asm						     Symbols 2 - 1
+
+
+
+
+Macros:
+
+                N a m e                 Type
+
+atod . . . . . . . . . . . . . .	Proc
+atow . . . . . . . . . . . . . .	Proc
+dtoa . . . . . . . . . . . . . .	Proc
+input  . . . . . . . . . . . . .	Proc
+output . . . . . . . . . . . . .	Proc
+wtoa . . . . . . . . . . . . . .	Proc
+
+
+Segments and Groups:
+
+                N a m e                 Size     Length   Align   Combine Class
+
+FLAT . . . . . . . . . . . . . .	GROUP
+STACK  . . . . . . . . . . . . .	32 Bit	 00001000 Para	  Stack	  'STACK'	 
+_DATA  . . . . . . . . . . . . .	32 Bit	 00000069 Para	  Public  'DATA'	
+_TEXT  . . . . . . . . . . . . .	32 Bit	 00000226 Para	  Public  'CODE'	
+
+
+Procedures, parameters, and locals:
+
+                N a m e                 Type     Value    Attr
+
+_MainProc  . . . . . . . . . . .	P Near	 00000000 _TEXT	Length= 000000B1 Public
+  cubeRootLoop . . . . . . . . .	L Near	 00000033 _TEXT	
+atofproc . . . . . . . . . . . .	P Near	 000000B1 _TEXT	Length= 00000074 Public
+  endifMinus . . . . . . . . . .	L Near	 000000E2 _TEXT	
+  whileOK  . . . . . . . . . . .	L Near	 000000E2 _TEXT	
+  endifPoint . . . . . . . . . .	L Near	 000000F1 _TEXT	
+  endifDec . . . . . . . . . . .	L Near	 00000112 _TEXT	
+  nextChar . . . . . . . . . . .	L Near	 00000112 _TEXT	
+  endwhileOK . . . . . . . . . .	L Near	 00000115 _TEXT	
+  endifNeg . . . . . . . . . . .	L Near	 0000011F _TEXT	
+ftoaproc . . . . . . . . . . . .	P Near	 00000125 _TEXT	Length= 00000101 Public
+  elseNeg  . . . . . . . . . . .	L Near	 00000142 _TEXT	
+  endifNeg . . . . . . . . . . .	L Near	 00000147 _TEXT	
+  untilLess  . . . . . . . . . .	L Near	 00000166 _TEXT	
+  elseLess . . . . . . . . . . .	L Near	 00000180 _TEXT	
+  whileLess  . . . . . . . . . .	L Near	 00000180 _TEXT	
+  endwhileLess . . . . . . . . .	L Near	 0000019A _TEXT	
+  endifBigger  . . . . . . . . .	L Near	 0000019A _TEXT	
+  endifZero  . . . . . . . . . .	L Near	 0000019A _TEXT	
+  endifOver  . . . . . . . . . .	L Near	 000001B8 _TEXT	
+  forDigit . . . . . . . . . . .	L Near	 000001D5 _TEXT	
+  NegExp . . . . . . . . . . . .	L Near	 0000020A _TEXT	
+  endifNegExp  . . . . . . . . .	L Near	 0000020F _TEXT	
+
+
+Symbols:
+
+                N a m e                 Type     Value    Attr
+
+@CodeSize  . . . . . . . . . . .	Number	 00000000h   
+@DataSize  . . . . . . . . . . .	Number	 00000000h   
+@Interface . . . . . . . . . . .	Number	 00000000h   
+@Model . . . . . . . . . . . . .	Number	 00000007h   
+@code  . . . . . . . . . . . . .	Text   	 _TEXT
+@data  . . . . . . . . . . . . .	Text   	 FLAT
+@fardata?  . . . . . . . . . . .	Text   	 FLAT
+@fardata . . . . . . . . . . . .	Text   	 FLAT
+@stack . . . . . . . . . . . . .	Text   	 FLAT
+_getInput  . . . . . . . . . . .	L Near	 00000000 FLAT	External
+_showOutput  . . . . . . . . . .	L Near	 00000000 FLAT	External
+atodproc . . . . . . . . . . . .	L Near	 00000000 FLAT	External
+atowproc . . . . . . . . . . . .	L Near	 00000000 FLAT	External
+byteTen  . . . . . . . . . . . .	Byte	 00000068 _DATA	
+digit  . . . . . . . . . . . . .	DWord	 00000060 _DATA	
+dtoaproc . . . . . . . . . . . .	L Near	 00000000 FLAT	External
+exponent . . . . . . . . . . . .	DWord	 00000064 _DATA	
+float  . . . . . . . . . . . . .	DWord	 0000001D _DATA	
+oldRoot  . . . . . . . . . . . .	DWord	 00000044 _DATA	
+one  . . . . . . . . . . . . . .	DWord	 00000058 _DATA	
+prompt1  . . . . . . . . . . . .	Byte	 00000000 _DATA	
+resultLbl  . . . . . . . . . . .	Byte	 00000021 _DATA	
+rootOut  . . . . . . . . . . . .	Byte	 00000033 _DATA	
+root . . . . . . . . . . . . . .	DWord	 00000040 _DATA	
+round  . . . . . . . . . . . . .	DWord	 0000005C _DATA	
+smallValue . . . . . . . . . . .	DWord	 00000048 _DATA	
+string . . . . . . . . . . . . .	Byte	 00000011 _DATA	
+ten  . . . . . . . . . . . . . .	DWord	 00000054 _DATA	
+three  . . . . . . . . . . . . .	DWord	 00000050 _DATA	
+two  . . . . . . . . . . . . . .	DWord	 0000004C _DATA	
+wtoaproc . . . . . . . . . . . .	L Near	 00000000 FLAT	External
+
+	   0 Warnings
+	   2 Errors

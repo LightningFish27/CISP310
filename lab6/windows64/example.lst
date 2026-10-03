@@ -1,0 +1,126 @@
+Microsoft (R) Macro Assembler (x64) Version 14.44.35216.0   10/08/25 17:05:22
+example.asm						     Page 1 - 1
+
+
+				; Compute x - 2y + 4z in EAX based on user input using windows64 framework
+				; Author:  G. Williams
+				; Date:    10/08/25
+
+				INCLUDE io.h            ; header file for input/output
+			      C ; IO.H -- header file for I/O macros (listing suppressed)
+			      C .NOLIST      ; turn off listing
+			      C .LIST        ; begin listing
+			      C 
+
+ 00000000			.DATA               ; reserve storage for data
+ 00000000 00000000		x       DWORD       ?
+ 00000004 00000000		y       DWORD       ?
+ 00000008 00000000		z       DWORD       ?
+ 0000000C 45 6E 74 65 72	prompt1   BYTE    "Enter x", 0
+	   20 78 00
+ 00000014 45 6E 74 65 72	prompt2   BYTE    "Enter y", 0
+	   20 79 00
+ 0000001C 45 6E 74 65 72	prompt3   BYTE    "Enter z", 0
+	   20 7A 00
+
+ 00000024  00000028 [		string    BYTE    40 DUP (?)
+	    00
+	   ]
+ 0000004C 54 68 65 20 76	resultLbl BYTE    "The value of the function x - 2y + 4z is:", 0
+	   61 6C 75 65 20
+	   6F 66 20 74 68
+	   65 20 66 75 6E
+	   63 74 69 6F 6E
+	   20 78 20 2D 20
+	   32 79 20 2B 20
+	   34 7A 20 69 73
+	   3A 00
+ 00000076  0000000B [		sum       BYTE    11 DUP(?), 0
+	    00
+	   ] 00
+
+ 00000000			.CODE
+ 00000000			MainProc  PROC
+ 00000000  48/ 83 EC 78		          sub     rsp, 120        ; reserve stack space for MainProc
+
+ 00000004  B8 00000000		          mov eax, 0                    ; clear EAX
+
+				          input   prompt1, string, 40   ; read ASCII characters
+				          atod    string                ; convert to integer
+ 00000095  89 05 00000000 R	          mov     x, eax                ; store in memory
+
+				          input   prompt2, string, 40   ; read ASCII characters
+				          atod    string                ; convert to integer
+ 00000127  89 05 00000004 R	          mov     y, eax                ; store in memory
+
+				          input   prompt3, string, 40   ; read ASCII characters
+				          atod    string                ; convert to integer
+ 000001B9  89 05 00000008 R	          mov     z, eax                ; store in memory
+				        
+ 000001BF  8B 05 00000000 R	          mov     eax, x                ; Put x in EAX
+ 000001C5  8B 1D 00000004 R	          mov     ebx, y                ; Put y in EBX
+ 000001CB  D1 E3		          shl     ebx, 1                ; Multiply y by 2
+ 000001CD  2B C3		          sub     eax, ebx              ; Subtract 2y from x
+ 000001CF  8B 1D 00000008 R	          mov     ebx, z                ; Put z in EBX
+ 000001D5  C1 E3 02		          shl     ebx, 2                ; Multiply z by 4
+ 000001D8  03 C3		          add     eax, ebx              ; Add 4z to result
+
+				          dtoa    sum, eax              ; convert result to ASCII
+
+				          output  resultLbl, sum  ; output label and sum
+
+
+ 00000259  48/ 83 C4 78		          add     rsp, 120        ; restore stack
+ 0000025D  48/ C7 C0		          mov     rax, 0          ; value to return (0)
+	   00000000
+ 00000264  C3			          ret
+ 00000265			MainProc ENDP
+				END
+
+Microsoft (R) Macro Assembler (x64) Version 14.44.35216.0   10/08/25 17:05:22
+example.asm						     Symbols 2 - 1
+
+
+
+
+Macros:
+
+                N a m e                 Type
+
+atod . . . . . . . . . . . . . .	Proc
+atow . . . . . . . . . . . . . .	Proc
+dtoa . . . . . . . . . . . . . .	Proc
+input  . . . . . . . . . . . . .	Proc
+output . . . . . . . . . . . . .	Proc
+wtoa . . . . . . . . . . . . . .	Proc
+
+
+Procedures, parameters, and locals:
+
+                N a m e                 Type     Value    Attr
+
+MainProc . . . . . . . . . . . .	P 	 00000000 _TEXT	Length= 00000265 Public
+
+
+Symbols:
+
+                N a m e                 Type     Value    Attr
+
+atodproc . . . . . . . . . . . .	L 	 00000000 External
+atowproc . . . . . . . . . . . .	L 	 00000000 External
+dtoaproc . . . . . . . . . . . .	L 	 00000000 External
+getInput . . . . . . . . . . . .	L 	 00000000 External
+prompt1  . . . . . . . . . . . .	Byte	 0000000C _DATA	
+prompt2  . . . . . . . . . . . .	Byte	 00000014 _DATA	
+prompt3  . . . . . . . . . . . .	Byte	 0000001C _DATA	
+resultLbl  . . . . . . . . . . .	Byte	 0000004C _DATA	
+showOutput . . . . . . . . . . .	L 	 00000000 External
+string . . . . . . . . . . . . .	Byte	 00000024 _DATA	
+sum  . . . . . . . . . . . . . .	Byte	 00000076 _DATA	
+wtoaproc . . . . . . . . . . . .	L 	 00000000 External
+x  . . . . . . . . . . . . . . .	DWord	 00000000 _DATA	
+y  . . . . . . . . . . . . . . .	DWord	 00000004 _DATA	
+z  . . . . . . . . . . . . . . .	DWord	 00000008 _DATA	
+
+	   0 Warnings
+	   0 Errors

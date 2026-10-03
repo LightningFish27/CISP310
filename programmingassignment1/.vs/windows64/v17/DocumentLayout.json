@@ -1,0 +1,53 @@
+{
+  "Version": 1,
+  "WorkspaceRootPath": "C:\\Users\\LightningFish27\\Downloads\\CISP310\\programmingassignment1\\",
+  "Documents": [
+    {
+      "AbsoluteMoniker": "D:0:0:{7D26F1FC-12E6-4291-910B-082EC85C470B}|windows64\\windows64.vcxproj|C:\\Users\\LightningFish27\\Downloads\\CISP310\\programmingassignment1\\windows64\\williams_gavin_project1.asm||{8B382828-6202-11D1-8870-0000F87579D2}",
+      "RelativeMoniker": "D:0:0:{7D26F1FC-12E6-4291-910B-082EC85C470B}|windows64\\windows64.vcxproj|solutionrelative:windows64\\williams_gavin_project1.asm||{8B382828-6202-11D1-8870-0000F87579D2}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{7D26F1FC-12E6-4291-910B-082EC85C470B}|windows64\\windows64.vcxproj|C:\\Users\\LightningFish27\\Downloads\\CISP310\\programmingassignment1\\windows64\\framework.c||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}",
+      "RelativeMoniker": "D:0:0:{7D26F1FC-12E6-4291-910B-082EC85C470B}|windows64\\windows64.vcxproj|solutionrelative:windows64\\framework.c||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
+    }
+  ],
+  "DocumentGroupContainers": [
+    {
+      "Orientation": 0,
+      "VerticalTabListWidth": 256,
+      "DocumentGroups": [
+        {
+          "DockedWidth": 200,
+          "SelectedChildIndex": 1,
+          "Children": [
+            {
+              "$type": "Document",
+              "DocumentIndex": 1,
+              "Title": "framework.c",
+              "DocumentMoniker": "C:\\Users\\LightningFish27\\Downloads\\CISP310\\programmingassignment1\\windows64\\framework.c",
+              "RelativeDocumentMoniker": "windows64\\framework.c",
+              "ToolTip": "C:\\Users\\LightningFish27\\Downloads\\CISP310\\programmingassignment1\\windows64\\framework.c",
+              "RelativeToolTip": "windows64\\framework.c",
+              "ViewState": "AgIAACcAAAAAAAAAAAAAAEMAAAA2AAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000423|",
+              "WhenOpened": "2025-10-09T01:13:25.36Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 0,
+              "Title": "williams_gavin_project1.asm",
+              "DocumentMoniker": "C:\\Users\\LightningFish27\\Downloads\\CISP310\\programmingassignment1\\windows64\\williams_gavin_project1.asm",
+              "RelativeDocumentMoniker": "windows64\\williams_gavin_project1.asm",
+              "ToolTip": "C:\\Users\\LightningFish27\\Downloads\\CISP310\\programmingassignment1\\windows64\\williams_gavin_project1.asm",
+              "RelativeToolTip": "windows64\\williams_gavin_project1.asm",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAABEAAAA4AAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001001|",
+              "WhenOpened": "2025-10-09T00:11:21.38Z",
+              "EditorCaption": ""
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,37 @@
+{
+  "Version": 1,
+  "WorkspaceRootPath": "C:\\Users\\LightningFish27\\Downloads\\CISP310\\lab7\\",
+  "Documents": [
+    {
+      "AbsoluteMoniker": "D:0:0:{7D26F1FC-12E6-4291-910B-082EC85C470B}|windows64\\windows64.vcxproj|C:\\Users\\LightningFish27\\Downloads\\CISP310\\lab7\\windows64\\williams_gavin_lab7.asm||{8B382828-6202-11D1-8870-0000F87579D2}",
+      "RelativeMoniker": "D:0:0:{7D26F1FC-12E6-4291-910B-082EC85C470B}|windows64\\windows64.vcxproj|solutionrelative:windows64\\williams_gavin_lab7.asm||{8B382828-6202-11D1-8870-0000F87579D2}"
+    }
+  ],
+  "DocumentGroupContainers": [
+    {
+      "Orientation": 0,
+      "VerticalTabListWidth": 256,
+      "DocumentGroups": [
+        {
+          "DockedWidth": 200,
+          "SelectedChildIndex": 0,
+          "Children": [
+            {
+              "$type": "Document",
+              "DocumentIndex": 0,
+              "Title": "williams_gavin_lab7.asm",
+              "DocumentMoniker": "C:\\Users\\LightningFish27\\Downloads\\CISP310\\lab7\\windows64\\williams_gavin_lab7.asm",
+              "RelativeDocumentMoniker": "windows64\\williams_gavin_lab7.asm",
+              "ToolTip": "C:\\Users\\LightningFish27\\Downloads\\CISP310\\lab7\\windows64\\williams_gavin_lab7.asm",
+              "RelativeToolTip": "windows64\\williams_gavin_lab7.asm",
+              "ViewState": "AgIAABoAAAAAAAAAAAAAADQAAAAzAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001001|",
+              "WhenOpened": "2025-10-25T16:35:58.078Z",
+              "EditorCaption": ""
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

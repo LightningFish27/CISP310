@@ -1,0 +1,177 @@
+Microsoft (R) Macro Assembler Version 14.50.35718.0	    11/22/25 13:39:14
+williams_gavin_lab10.asm				     Page 1 - 1
+
+
+				; Example assembly language program -- adds 158 to number in memory
+				; Author:  R. Detmer
+				; Date:    6/2013
+
+				.586
+				.MODEL FLAT
+
+				include io.h            ; header file for input/output
+			      C ; IO.H -- header file for I/O macros (listing suppressed)
+			      C .NOLIST      ; turn off listing
+			      C .LIST        ; begin listing
+			      C 
+
+				.STACK  4096            ; reserve 4096-byte stack
+
+ 00000000			.DATA
+ 00000000 45 6E 74 65 72	prompt1     BYTE    "Enter a string: ", 0
+	   20 61 20 73 74
+	   72 69 6E 67 3A
+	   20 00
+ 00000011			stringIn    BYTE    80 DUP (?)          ; input string buffer
+
+ 00000061 45 6E 74 65 72	prompt2     BYTE    "Enter character to find: ", 0
+	   20 63 68 61 72
+	   61 63 74 65 72
+	   20 74 6F 20 66
+	   69 6E 64 3A 20
+	   00
+ 0000007B  00000001 [		charToFind  BYTE    1 DUP (?)                 ; character to find (room for newline + null)
+	    00
+	   ]
+
+ 0000007C 43 68 61 72 61	outputLbl   BYTE    "Character found this many times: ", 0
+	   63 74 65 72 20
+	   66 6F 75 6E 64
+	   20 74 68 69 73
+	   20 6D 61 6E 79
+	   20 74 69 6D 65
+	   73 3A 20 00
+ 0000009E  0000000A [		outputCount BYTE    10 DUP (?)
+	    00
+	   ]
+
+ 00000000			.CODE                           ; start of main program code
+ 00000000			_MainProc    PROC
+				        input prompt2, charToFind, 1         ; get character to find
+ 0000001E  C6 05 0000007C R	        mov BYTE PTR [charToFind + 1], 0     ; null terminate character input to cutoff any extra input
+	   00
+
+				        input prompt1, stringIn, 80          ; get input string from user
+
+				        ; push parameters and call charCount
+ 00000043  8D 05 00000011 R	        lea eax, stringIn
+ 00000049  50			        push eax				
+ 0000004A  8D 05 0000007B R	        lea eax, charToFind
+ 00000050  50			        push eax                            ; push address of character
+
+ 00000051  E8 0000003A		        call charCount                      ; call string character count function (result in eax)
+ 00000056  83 C4 08		        add  esp, 8                         ; clean up stack (2 parameters)
+
+				        ; display result
+				        dtoa outputCount, eax               ; convert count to string
+				        output outputLbl, outputCount       ; output result
+
+ 0000008A  B8 00000000		        mov   eax, 0            ; exit with return code 0
+ 0000008F  C3			        ret
+ 00000090			_MainProc    ENDP
+
+ 00000090			charCount PROC
+ 00000090  55			        push ebp
+ 00000091  8B EC		        mov  ebp, esp
+
+ 00000093  57			        push edi
+ 00000094  56			        push esi
+ 00000095  9C			        pushfd  ; save flags
+				        
+ 00000096  8B 75 08		        mov esi , [ebp + 8]             ; get address of string
+ 00000099  8B 7D 0C		        mov edi , [ebp + 12]            ; get address of char
+ 0000009C  33 C0		        xor eax, eax ; clear eax
+ 0000009E  8A 07		        mov al ,  BYTE PTR [edi]        ; get the character to find
+
+				        ; clear ebx and ecx
+ 000000A0  33 C9		        xor ecx, ecx
+ 000000A2  33 DB		        xor ebx, ebx
+
+ 000000A4			        whileNoNull:
+ 000000A4  80 3C 0E 00		            cmp BYTE PTR [esi + ecx], 0  ; check for null terminator
+ 000000A8  74 09		            je   endWhileNoNull          ; if null, end loop
+
+ 000000AA  38 04 0E		            cmp BYTE PTR [esi + ecx], al ; compare current character with target
+ 000000AD  75 01		            jne  skipIncrement           ; if not equal, skip incrementing count
+ 000000AF  43			            inc  ebx                     ; increment count
+
+ 000000B0			        skipIncrement:
+ 000000B0  41			            inc ecx                  ; move to next character
+ 000000B1  EB F1		            jmp  whileNoNull             ; repeat loop
+
+ 000000B3			        endWhileNoNull:
+ 000000B3  8B C3		        mov eax, ebx		  ; move count to eax for return value
+ 000000B5  9D			        popfd   ; restore flags
+ 000000B6  5E			        pop  esi
+ 000000B7  5F			        pop  edi
+ 000000B8  5D			        pop  ebp
+ 000000B9  C3			        ret
+ 000000BA			charCount ENDP
+				END                             ; end of source code
+Microsoft (R) Macro Assembler Version 14.50.35718.0	    11/22/25 13:39:14
+williams_gavin_lab10.asm				     Symbols 2 - 1
+
+
+
+
+Macros:
+
+                N a m e                 Type
+
+atod . . . . . . . . . . . . . .	Proc
+atow . . . . . . . . . . . . . .	Proc
+dtoa . . . . . . . . . . . . . .	Proc
+input  . . . . . . . . . . . . .	Proc
+output . . . . . . . . . . . . .	Proc
+wtoa . . . . . . . . . . . . . .	Proc
+
+
+Segments and Groups:
+
+                N a m e                 Size     Length   Align   Combine Class
+
+FLAT . . . . . . . . . . . . . .	GROUP
+STACK  . . . . . . . . . . . . .	32 Bit	 00001000 Para	  Stack	  'STACK'	 
+_DATA  . . . . . . . . . . . . .	32 Bit	 000000A8 Para	  Public  'DATA'	
+_TEXT  . . . . . . . . . . . . .	32 Bit	 000000BA Para	  Public  'CODE'	
+
+
+Procedures, parameters, and locals:
+
+                N a m e                 Type     Value    Attr
+
+_MainProc  . . . . . . . . . . .	P Near	 00000000 _TEXT	Length= 00000090 Public
+charCount  . . . . . . . . . . .	P Near	 00000090 _TEXT	Length= 0000002A Public
+  whileNoNull  . . . . . . . . .	L Near	 000000A4 _TEXT	
+  skipIncrement  . . . . . . . .	L Near	 000000B0 _TEXT	
+  endWhileNoNull . . . . . . . .	L Near	 000000B3 _TEXT	
+
+
+Symbols:
+
+                N a m e                 Type     Value    Attr
+
+@CodeSize  . . . . . . . . . . .	Number	 00000000h   
+@DataSize  . . . . . . . . . . .	Number	 00000000h   
+@Interface . . . . . . . . . . .	Number	 00000000h   
+@Model . . . . . . . . . . . . .	Number	 00000007h   
+@code  . . . . . . . . . . . . .	Text   	 _TEXT
+@data  . . . . . . . . . . . . .	Text   	 FLAT
+@fardata?  . . . . . . . . . . .	Text   	 FLAT
+@fardata . . . . . . . . . . . .	Text   	 FLAT
+@stack . . . . . . . . . . . . .	Text   	 FLAT
+_getInput  . . . . . . . . . . .	L Near	 00000000 FLAT	External
+_showOutput  . . . . . . . . . .	L Near	 00000000 FLAT	External
+atodproc . . . . . . . . . . . .	L Near	 00000000 FLAT	External
+atowproc . . . . . . . . . . . .	L Near	 00000000 FLAT	External
+charToFind . . . . . . . . . . .	Byte	 0000007B _DATA	
+dtoaproc . . . . . . . . . . . .	L Near	 00000000 FLAT	External
+outputCount  . . . . . . . . . .	Byte	 0000009E _DATA	
+outputLbl  . . . . . . . . . . .	Byte	 0000007C _DATA	
+prompt1  . . . . . . . . . . . .	Byte	 00000000 _DATA	
+prompt2  . . . . . . . . . . . .	Byte	 00000061 _DATA	
+stringIn . . . . . . . . . . . .	Byte	 00000011 _DATA	
+wtoaproc . . . . . . . . . . . .	L Near	 00000000 FLAT	External
+
+	   0 Warnings
+	   0 Errors

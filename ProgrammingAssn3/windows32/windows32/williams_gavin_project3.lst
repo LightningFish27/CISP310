@@ -1,0 +1,177 @@
+Microsoft (R) Macro Assembler Version 14.50.35718.0	    11/29/25 23:07:12
+williams_gavin_project3.asm				     Page 1 - 1
+
+
+				; Programming Assignment 3: Count Differences; counts the differences between two strings
+				; Author:  G. Williams
+				; Date:    11-29-2025
+
+				.586
+				.MODEL FLAT
+
+				INCLUDE io.h            ; header file for input/output
+			      C ; IO.H -- header file for I/O macros (listing suppressed)
+			      C .NOLIST      ; turn off listing
+			      C .LIST        ; begin listing
+			      C 
+
+				.STACK 4096
+
+ 00000000			.DATA
+				; Prompts and buffers
+ 00000000 45 6E 74 65 72	prompt1 BYTE    "Enter first string", 0
+	   20 66 69 72 73
+	   74 20 73 74 72
+	   69 6E 67 00
+ 00000013 45 6E 74 65 72	prompt2 BYTE    "Enter second string", 0
+	   20 73 65 63 6F
+	   6E 64 20 73 74
+	   72 69 6E 67 00
+
+ 00000027  00000028 [		string1  BYTE    40 DUP (?)
+	    00
+	   ]
+ 0000004F  00000028 [		string2  BYTE    40 DUP (?)
+	    00
+	   ]
+
+ 00000077 4E 75 6D 62 65	resultLbl BYTE  "Number of Differences", 0
+	   72 20 6F 66 20
+	   44 69 66 66 65
+	   72 65 6E 63 65
+	   73 00
+ 0000008D  0000000B [		diff     BYTE    11 DUP (?), 0
+	    00
+	   ] 00
+
+ 00000000			.CODE
+ 00000000			_MainProc PROC
+				        input   prompt1, string1, 40    ; read ASCII characters
+ 0000001E  8D 05 00000027 R	        lea     eax, string1            ; get address
+ 00000024  50			        push    eax                     ; push for function call (first number)
+
+				        input   prompt2, string2, 40    ; repeat for second number
+ 00000043  8D 05 0000004F R	        lea     eax, string2           
+ 00000049  50			        push    eax
+				        
+ 0000004A  E8 0000003A		        call   countDifferences         ; call function to count differences
+ 0000004F  83 C4 08		        add     esp, 8                  ; clean up stack (2 parameters)
+
+
+				        dtoa    diff, eax               ; convert to ASCII characters
+				        output  resultLbl, diff         ; output label and sum
+
+ 00000083  B8 00000000		        mov     eax, 0  ; exit with return code 0
+ 00000088  C3			        ret
+ 00000089			_MainProc ENDP
+
+ 00000089			countDifferences PROC
+				        ; Parameters: 
+				        ;   string1 - pointer to first string
+				        ;   string2 - pointer to second string
+				        ; Returns:
+				        ;   eax - number of differing characters
+ 00000089  55			        push    ebp
+ 0000008A  8B EC		        mov     ebp, esp
+ 0000008C  8B 75 08		        mov     esi, [ebp + 8]   ; pointer to string1
+ 0000008F  8B 7D 0C		        mov     edi, [ebp + 12]  ; pointer to string2
+ 00000092  33 C9		        xor     ecx, ecx         ; difference count = 0
+
+ 00000094			        compare_loop:
+ 00000094  8A 06		        mov     al, [esi]      ; load byte from string1
+ 00000096  8A 1F		        mov     bl, [edi]      ; load byte from string2
+
+ 00000098  3C 00		        cmp     al, 0          ; check for null terminator
+ 0000009A  74 10		        je      done_compare    ; if end of string1, done
+ 0000009C  80 FB 00		        cmp     bl, 0          ; check for null terminator
+ 0000009F  74 0B		        je      done_compare    ; if end of string2, done
+
+ 000000A1  3A C3		        cmp     al, bl         ; compare characters
+ 000000A3  75 02		        jne     inc_diff        ; if different, increment count
+ 000000A5  EB 01		        jmp     next_char
+
+ 000000A7			        inc_diff:
+ 000000A7  41			        inc     ecx             ; increment difference count
+
+ 000000A8			        next_char:
+ 000000A8  46			        inc     esi             ; move to next character in string1
+ 000000A9  47			        inc     edi             ; move to next character in string2
+ 000000AA  EB E8		        jmp     compare_loop
+
+ 000000AC			        done_compare:
+ 000000AC  8B C1		        mov     eax, ecx        ; move difference count to eax
+ 000000AE  5D			        pop     ebp
+ 000000AF  C3			        ret
+
+ 000000B0			countDifferences ENDP
+
+				END                             ; end of source code
+
+Microsoft (R) Macro Assembler Version 14.50.35718.0	    11/29/25 23:07:12
+williams_gavin_project3.asm				     Symbols 2 - 1
+
+
+
+
+Macros:
+
+                N a m e                 Type
+
+atod . . . . . . . . . . . . . .	Proc
+atow . . . . . . . . . . . . . .	Proc
+dtoa . . . . . . . . . . . . . .	Proc
+input  . . . . . . . . . . . . .	Proc
+output . . . . . . . . . . . . .	Proc
+wtoa . . . . . . . . . . . . . .	Proc
+
+
+Segments and Groups:
+
+                N a m e                 Size     Length   Align   Combine Class
+
+FLAT . . . . . . . . . . . . . .	GROUP
+STACK  . . . . . . . . . . . . .	32 Bit	 00001000 Para	  Stack	  'STACK'	 
+_DATA  . . . . . . . . . . . . .	32 Bit	 00000099 Para	  Public  'DATA'	
+_TEXT  . . . . . . . . . . . . .	32 Bit	 000000B0 Para	  Public  'CODE'	
+
+
+Procedures, parameters, and locals:
+
+                N a m e                 Type     Value    Attr
+
+_MainProc  . . . . . . . . . . .	P Near	 00000000 _TEXT	Length= 00000089 Public
+countDifferences . . . . . . . .	P Near	 00000089 _TEXT	Length= 00000027 Public
+  compare_loop . . . . . . . . .	L Near	 00000094 _TEXT	
+  inc_diff . . . . . . . . . . .	L Near	 000000A7 _TEXT	
+  next_char  . . . . . . . . . .	L Near	 000000A8 _TEXT	
+  done_compare . . . . . . . . .	L Near	 000000AC _TEXT	
+
+
+Symbols:
+
+                N a m e                 Type     Value    Attr
+
+@CodeSize  . . . . . . . . . . .	Number	 00000000h   
+@DataSize  . . . . . . . . . . .	Number	 00000000h   
+@Interface . . . . . . . . . . .	Number	 00000000h   
+@Model . . . . . . . . . . . . .	Number	 00000007h   
+@code  . . . . . . . . . . . . .	Text   	 _TEXT
+@data  . . . . . . . . . . . . .	Text   	 FLAT
+@fardata?  . . . . . . . . . . .	Text   	 FLAT
+@fardata . . . . . . . . . . . .	Text   	 FLAT
+@stack . . . . . . . . . . . . .	Text   	 FLAT
+_getInput  . . . . . . . . . . .	L Near	 00000000 FLAT	External
+_showOutput  . . . . . . . . . .	L Near	 00000000 FLAT	External
+atodproc . . . . . . . . . . . .	L Near	 00000000 FLAT	External
+atowproc . . . . . . . . . . . .	L Near	 00000000 FLAT	External
+diff . . . . . . . . . . . . . .	Byte	 0000008D _DATA	
+dtoaproc . . . . . . . . . . . .	L Near	 00000000 FLAT	External
+prompt1  . . . . . . . . . . . .	Byte	 00000000 _DATA	
+prompt2  . . . . . . . . . . . .	Byte	 00000013 _DATA	
+resultLbl  . . . . . . . . . . .	Byte	 00000077 _DATA	
+string1  . . . . . . . . . . . .	Byte	 00000027 _DATA	
+string2  . . . . . . . . . . . .	Byte	 0000004F _DATA	
+wtoaproc . . . . . . . . . . . .	L Near	 00000000 FLAT	External
+
+	   0 Warnings
+	   0 Errors

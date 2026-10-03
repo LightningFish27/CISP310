@@ -1,0 +1,166 @@
+Microsoft (R) Macro Assembler Version 14.44.35216.0	    10/31/25 13:36:00
+example.asm						     Page 1 - 1
+
+
+				; Lab 8 -- GCD as procedure
+				; Author:   G. Williams
+				; Date:     10/2025
+				; Notes:    I find it very interesting that assembly passes arguments in the way that it does. It's not incredibly hard to follow, but it's definitely different from higher-level languages.
+
+				.586
+				.MODEL FLAT
+
+				INCLUDE io.h            ; header file for input/output
+			      C ; IO.H -- header file for I/O macros (listing suppressed)
+			      C .NOLIST      ; turn off listing
+			      C .LIST        ; begin listing
+			      C 
+
+				.STACK 4096
+
+ 00000000			.DATA
+				; Define variables. These two are optional, as we could use registers only.
+ 00000000 00000000		number1   DWORD   ?           ; first input number
+ 00000004 00000000		number2   DWORD   ?           ; second input number
+
+				; input/output prompts and storage
+ 00000008 45 6E 74 65 72	prompt1   BYTE    "Enter first number", 0
+	   20 66 69 72 73
+	   74 20 6E 75 6D
+	   62 65 72 00
+ 0000001B 45 6E 74 65 72	prompt2   BYTE    "Enter second number", 0
+	   20 73 65 63 6F
+	   6E 64 20 6E 75
+	   6D 62 65 72 00
+ 0000002F  00000028 [		string    BYTE    40 DUP (?)
+	    00
+	   ]
+ 00000057 54 68 65 20 47	resultLbl BYTE    "The GCD is", 0
+	   43 44 20 69 73
+	   00
+ 00000062  0000000B [		gcdOut    BYTE    11 DUP(?), 0
+	    00
+	   ] 00
+
+ 00000000			.CODE
+ 00000000			_MainProc PROC
+				        input   prompt1, string, 40      ; read ASCII characters
+				        atod    string                   ; convert to integer
+ 0000002D  A3 00000000 R	        mov     number1, eax                 ; load into register for procedure call
+
+				        input   prompt2, string, 40      ; repeat for second number
+				        atod    string                   ; convert to integer
+ 0000005F  A3 00000004 R	        mov     number2, eax                 ; load into register for procedure call
+
+				        ; When pushing arguments for a call, push right-to-left. They will be popped left-to-right in the called procedure.
+ 00000064  FF 35 00000004 R	        push    DWORD PTR number2        ; push second number onto stack
+ 0000006A  FF 35 00000000 R	        push    DWORD PTR number1        ; push first number onto stack
+ 00000070  E8 0000003A		        call    GCDProc                  ; call GCD procedure
+ 00000075  83 C4 08		        add     esp, 8                   ; clean up stack (2 DWORDs = 8 bytes)
+				        
+				        dtoa    gcdOut, eax              ; convert result to ASCII
+				        output  resultLbl, gcdOut        ; output result
+
+ 000000A9  B8 00000000		        mov     eax, 0  ; exit with return code 0
+ 000000AE  C3			        ret
+ 000000AF			_MainProc ENDP
+
+				; GCD Procedure: computes GCD of two numbers
+ 000000AF			GCDProc PROC
+				          ; Note: we first save base pointer on the stack, then set base pointer to current stack pointer. This means there is a DWORD argument at [ebp+4], and our first argument is at [ebp+8], second at [ebp+12], etc.
+ 000000AF  55			          push   ebp                         ; standard prologue
+ 000000B0  8B EC		          mov    ebp, esp                    ; set base pointer
+ 000000B2  53			          push   ebx                         ; save registers that will be used
+
+				          ; Input: number1 in eax, number2 in ebx
+ 000000B3  8B 45 08		          mov     eax, DWORD PTR [ebp+8]              ; load first number into eax
+ 000000B6  8B 5D 0C		          mov     ebx, DWORD PTR [ebp+12]             ; load second number into ebx
+
+				          ; This loop is essentially the same as it was for last week, though I am using the registers directly rather than variables in memory.
+ 000000B9			    gcd_loop:
+ 000000B9  83 FB 00		          cmp     ebx, 0                ; check if number2 is 0
+ 000000BC  74 0C		          je      gcd_done              ; if so, we are done
+
+ 000000BE  33 D2		          xor     edx, edx              ; clear edx before div. Note, I saw online that xor is faster than mov for this.
+ 000000C0  F7 F3		          div     ebx                   ; eax = number1 / number2, edx = remainder
+ 000000C2  8B D2		          mov     edx, edx              ; store remainder
+ 000000C4  8B C3		          mov     eax, ebx              ; eax = old divisor (number2)
+ 000000C6  8B DA		          mov     ebx, edx              ; ebx = remainder
+ 000000C8  EB EF		          jmp     gcd_loop              ; repeat loop
+ 000000CA			gcd_done:
+				          ; Note there is no need to save eax, as it is the return value register
+ 000000CA  5B			          pop     ebx                   ; restore registers
+ 000000CB  8B E5		          mov     esp, ebp              ; standard epilogue
+ 000000CD  5D			          pop     ebp
+ 000000CE  C3			          ret
+ 000000CF			GCDProc ENDP
+
+				END                             ; end of source code
+
+Microsoft (R) Macro Assembler Version 14.44.35216.0	    10/31/25 13:36:00
+example.asm						     Symbols 2 - 1
+
+
+
+
+Macros:
+
+                N a m e                 Type
+
+atod . . . . . . . . . . . . . .	Proc
+atow . . . . . . . . . . . . . .	Proc
+dtoa . . . . . . . . . . . . . .	Proc
+input  . . . . . . . . . . . . .	Proc
+output . . . . . . . . . . . . .	Proc
+wtoa . . . . . . . . . . . . . .	Proc
+
+
+Segments and Groups:
+
+                N a m e                 Size     Length   Align   Combine Class
+
+FLAT . . . . . . . . . . . . . .	GROUP
+STACK  . . . . . . . . . . . . .	32 Bit	 00001000 Para	  Stack	  'STACK'	 
+_DATA  . . . . . . . . . . . . .	32 Bit	 0000006E Para	  Public  'DATA'	
+_TEXT  . . . . . . . . . . . . .	32 Bit	 000000CF Para	  Public  'CODE'	
+
+
+Procedures, parameters, and locals:
+
+                N a m e                 Type     Value    Attr
+
+GCDProc  . . . . . . . . . . . .	P Near	 000000AF _TEXT	Length= 00000020 Public
+  gcd_loop . . . . . . . . . . .	L Near	 000000B9 _TEXT	
+  gcd_done . . . . . . . . . . .	L Near	 000000CA _TEXT	
+_MainProc  . . . . . . . . . . .	P Near	 00000000 _TEXT	Length= 000000AF Public
+
+
+Symbols:
+
+                N a m e                 Type     Value    Attr
+
+@CodeSize  . . . . . . . . . . .	Number	 00000000h   
+@DataSize  . . . . . . . . . . .	Number	 00000000h   
+@Interface . . . . . . . . . . .	Number	 00000000h   
+@Model . . . . . . . . . . . . .	Number	 00000007h   
+@code  . . . . . . . . . . . . .	Text   	 _TEXT
+@data  . . . . . . . . . . . . .	Text   	 FLAT
+@fardata?  . . . . . . . . . . .	Text   	 FLAT
+@fardata . . . . . . . . . . . .	Text   	 FLAT
+@stack . . . . . . . . . . . . .	Text   	 FLAT
+_getInput  . . . . . . . . . . .	L Near	 00000000 FLAT	External
+_showOutput  . . . . . . . . . .	L Near	 00000000 FLAT	External
+atodproc . . . . . . . . . . . .	L Near	 00000000 FLAT	External
+atowproc . . . . . . . . . . . .	L Near	 00000000 FLAT	External
+dtoaproc . . . . . . . . . . . .	L Near	 00000000 FLAT	External
+gcdOut . . . . . . . . . . . . .	Byte	 00000062 _DATA	
+number1  . . . . . . . . . . . .	DWord	 00000000 _DATA	
+number2  . . . . . . . . . . . .	DWord	 00000004 _DATA	
+prompt1  . . . . . . . . . . . .	Byte	 00000008 _DATA	
+prompt2  . . . . . . . . . . . .	Byte	 0000001B _DATA	
+resultLbl  . . . . . . . . . . .	Byte	 00000057 _DATA	
+string . . . . . . . . . . . . .	Byte	 0000002F _DATA	
+wtoaproc . . . . . . . . . . . .	L Near	 00000000 FLAT	External
+
+	   0 Warnings
+	   0 Errors
